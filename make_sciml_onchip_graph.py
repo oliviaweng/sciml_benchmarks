@@ -149,5 +149,5 @@ ax.set_xlabel("Latency requirement [s]")
 ax.set_ylabel("Memory bandwidth [B/s]")
 
 plt.tight_layout()
-plt.savefig("sciml_graph.pdf")
-plt.savefig("sciml_graph.png")
+plt.savefig("sciml_onchip_graph.pdf")
+plt.savefig("sciml_onchip_graph.png")
