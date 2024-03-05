@@ -6,6 +6,9 @@ import mplhep as hep
 import numpy as np
 import math
 
+# 32 bits per block ram Bandwidth x # BRAMs
+# dual port 16 bits
+
 # Example
 # 10 MB MLP model
 # 10 MB x 10 MB = 1e7 x 1e7 = 1e14 Ops required
@@ -42,38 +45,49 @@ import math
 # = 100e7 B * 1e-2 Ops = 100e5 Ops * B = 1e7
 
 ####
+# Latency performance of the model 
 # New calculations (input bandwidth + model wt bandwidth)
 # LHC Sensor (ECON)
-# 2k weights / 25 ns = 80e9
+# 2k weights / 25 ns = 80e9 
 
 # LHC Trigger (Jet tagger)
-# 4k weights / 150 ns = 26e9
+# 4k weights / 150 ns = 26e9 
 
 # Beam control
-# 35k weights / 4 us = 9e9 
+# 35k weights / 4 us = 9e9
 
 # Plasma control
 # 13k weights / 7 us = 2e9 
 
 # KWS
-# 3e5 weights / 1 ms = 300e6
+# 3e5 weights / 17 us = 17e9 
+# 3e5 weights / 33 us = 9e9
+# Latency: [17 us, 33 us]
 
 # AD
-# 2e4 weights / 1 ms = 20e6 
+# 2e4 weights / 19 us = 1e9 
+# 2e4 weights / 45 us = 4e8 
+# Latency: [19 us, 45 us]
 
 # label: data rate lower bound [B/s], data rate upper bound [B/s], latency lower bound [s], latency upper bound [s]
 input_dict = {
     # LHC sensor
     # "LHC sensor": [25e12, 100e12, 10e-9, 25e-9],
     # LHC sensor + model
-    "LHC sensor": [26e12, 101e12, 10e-9, 25e-9],
+    # "LHC sensor": [26e12, 101e12, 10e-9, 25e-9],
+    # LHC sensor model
+    "LHC sensor": [80e9, 100e9, 10e-9, 25e-9],
     # "LHC near-sensor": [48 * 40e6, 48 * 40e6, 25e-9, 100e-9],
     # "LHC trigger": [32 * 40e6, 32 * 40e6, 100e-9, 5e-6],
     # LHC trigger + model
-    "LHC trigger": [32 * 40e6 + 26e9, 32 * 40e6 + 26e9, 100e-9, 5e-6],
+    # "LHC trigger": [32 * 40e6 + 26e9, 32 * 40e6 + 26e9, 100e-9, 5e-6],
+    # LHC trigger model
+    "LHC trigger": [26e9, 30e9, 150e-9, 200e-9],
     # "Beam Control": [3e3 * 15, 3e3 * 15, 100e-6, 5e-3], # Booster
     # Booster control + model
-    "Beam control": [3e3 * 15 + 9e9, 3e3 * 15 + 9e9, 100e-6, 5e-3], # Booster
+    # "Beam control": [3e3 * 15 + 9e9, 3e3 * 15 + 9e9, 100e-6, 5e-3], # Booster
+    # Beam control model
+    "Beam control": [9e9, 25e9, 1e-6, 7e-6], # Booster
     # "Magnet quench": [3e6, 3e6, 100e-6, 100e-6],  # Quench
     # "Pixel": [1.28e9/8 * 40/.75, 4*1.28e9/8 * 40/.75, 10e-9, 25e-9],
     # "DUNE": [1e9, 10e9, 1, 5*60],
@@ -86,14 +100,19 @@ input_dict = {
     # "Electron microscopy": [0.6e9, 0.6e9, 50e-6, 50e-6],
     # "Plasma control": [3e9, 3e9, 5e-6, 20e-6],
     # Plasma control + model
-    "Plasma control": [3e9 + 2e9, 3e9 + 2e9, 5e-6, 20e-6],
+    # "Plasma control": [3e9 + 2e9, 3e9 + 2e9, 5e-6, 20e-6],
+    # Plasma control model
+    "Plasma control": [2e9, 2e9, 5e-6, 10e-6],
     # "Neuro": [5e6, 5e6, 1e-3, 1e-3],
     # "Internet-of-things": [3e3 / 100e-3, 3e3 / 1e-3, 1e-3, 100e-3],
-    # IoT + KWS
-    "Keyword Spotting": [3e3 / 100e-3 + 3e8, 3e3 / 1e-3 + 3e8, 1e-3, 100e-3],
+    # TODO: Combine KWS and AD into one IoT error bar
+    # KWS hls4ml model
+    "Keyword Spotting": [9e9, 17e9, 17e-6, 33e-6],
     # IoT + AD
-    "Anomoly Detection": [3e3 / 100e-3 + 20e6, 3e3 / 1e-3 + 20e6, 1e-3, 100e-3],
-    "Mobile devices": [1e3 / 100e-3, 1e3 / 40e-3, 40e-3, 100e-3],
+    # "Anomoly Detection": [3e3 / 100e-3 + 20e6, 3e3 / 1e-3 + 20e6, 1e-3, 100e-3],
+    # AD hls4ml model
+    "Anomaly Detection": [4e8, 1e9, 19e-6, 45e-6],
+    # "Mobile devices": [1e3 / 100e-3, 1e3 / 40e-3, 40e-3, 100e-3],
     # "FF": [10e12, 10e13, 10e-9, 50e-9],
 }
 labels = input_dict.keys()
@@ -120,45 +139,14 @@ colors += ["#bbbbbb"]*10
 
 plt.style.use([hep.style.ROOT, hep.style.firamath])
 
-ymin = 5e3
+ymin = 5e7
 ymax = 5e14
 xmin = 1e-9
-xmax = 1e2
+xmax = 1e-1
 
 
 f, ax = plt.subplots()
 ax2 = ax.twinx()
-# FastML contour
-#ax.text(2e-9, 2e10, "FastML Science (WIP)", color="gray", style="italic", weight="bold")
-# ax.text(2e-2, 2e13, "Fast ML for Science", color="gray", style="italic", weight="bold")
-# ax.text(2e-2, 5e12, "benchmark tasks", color="gray", style="italic", fontsize=22)
-# ax.text(2e-2, 5e11, "DRAFT", color="red", style="italic", fontsize=40, alpha=0.5)
-
-
-# box_y = np.array([3e3 * 15, 3e3 * 15, ymax, ymax])
-# box_x = np.array([xmin, 5e-3, 5e-3, xmin])
-# ax.fill(box_x, box_y, "gray", alpha=0.2)
-
-# FF - WIP
-# ax.text(2e-9, 55e12, "FF", color="blue", style="italic", fontsize=22)
-# box_y = np.array([50e12, 50e12, 300e12, 300e12])
-# box_x = np.array([1.4e-9, 10e-9, 10e-9, 1.4e-9])
-# ax.fill(box_x, box_y, "blue", alpha=0.2)
-
-# BRAM - WIP
-# ax.text(1.4e-9, 2e12, "BRAM", color="red", style="italic", fontsize=12)
-# box_y = np.array([1e12, 1e12, 10e12, 10e12])
-# box_x = np.array([1.4e-9, 10e-9, 10e-9, 1.4e-9])
-# ax.fill(box_x, box_y, "red", alpha=0.2)
-
-# DRAM - WIP
-# DDR2 - DDR4
-# Bandwidth = [3 GB, 25GB]
-# Latency = [100ns, 250,000 ns]
-# ax.text(1e-6, 7e9, "DRAM", color="green", style="italic", fontsize=16)
-# box_y = np.array([3e9, 3e9, 25e9, 25e9])
-# box_x = np.array([100e-9, 250000e-9, 250000e-9, 100e-9])
-# ax.fill(box_x, box_y, "green", alpha=0.2)
 
 for xloi, xhii, yloi, yhii, l, c in zip(xlo, xhi, ylo, yhi, labels, colors):
     yi = math.sqrt(yloi * yhii)
@@ -168,13 +156,16 @@ for xloi, xhii, yloi, yhii, l, c in zip(xlo, xhi, ylo, yhi, labels, colors):
         [yi],
         yerr=[[yi - yloi], [yhii - yi]],
         xerr=[[xi - xloi], [xhii - xi]],
-        # label=l,
+        label=l,
         marker="",
         capsize=6,
         markersize=10,
         color=c,
     )
     sz=20.
+
+    continue # To turn of plot labels and just rely on legend
+
     if "Internet-of-things" in l:
         # ax.text(xi * 5, yi * 2, l, color=c, size=sz)
         ax.text(xi * 1.1, yi * 2, "IoT", color=c, size=sz)
@@ -188,10 +179,10 @@ for xloi, xhii, yloi, yhii, l, c in zip(xlo, xhi, ylo, yhi, labels, colors):
         # ax.text(xi * 2, yi * 2, l, color=c, size=sz)
         ax.text(xi * 2, yi * 0.5, "Mobile\ndevices", color=c, size=sz)
     elif "Beam control" in l:
-        ax.text(xi * 0.5, yi * 0.5, l, color=c, size=sz)
+        ax.text(xi * 0.5, yi * 0.25, l, color=c, size=sz)
     elif "LHC sensor" in l:
         # ax.text(xi * 3, yi / 2, l, color=c, size=sz)
-        ax.text(xi * 3, yi / 2, "LHC\nsensor", color=c, size=sz)
+        ax.text(xi / 2, yi * 2, "LHC\nsensor", color=c, size=sz)
     elif "LHC near-sensor" in l:
         ax.text(xi / 20, yi * 3.5, "LHC", color=c, size=sz)
         ax.text(xi / 20, yi * 1.5, "near-sensor", color=c, size=sz)
@@ -203,13 +194,14 @@ for xloi, xhii, yloi, yhii, l, c in zip(xlo, xhi, ylo, yhi, labels, colors):
     elif "Qubit Readout" in l:
         ax.text(xi / 10, yi * 1.9, l, color=c, size=sz)
     elif "Plasma control" in l:
-        ax.text(xi, yi * 0.3, l, color=c, size=sz)
+        # ax.text(xi, yi * 0.3, l, color=c, size=sz)
+        ax.text(xi / 2, yi * 0.1, "Plasma\ncontrol", color=c, size=sz)
     elif "DUNE readout" in l:
         ax.text(xi / 5e2, yi / 3, l, color=c, size=sz)
     elif "DUNE" in l:
         ax.text(xi / 1e2, yi / 6, l, color=c, size=sz)
     elif "LHC trigger" in l:
-        ax.text(xi * 10, yi / 1.2, l, color=c, size=sz)
+        ax.text(xi * 2, yi / 1.2, l, color=c, size=sz)
     elif "Magnet quench" in l:
         ax.text(xi / 1e3, yi / 4, l, color=c, size=sz)
     elif "Electron microscopy" in l:
@@ -223,17 +215,18 @@ for xloi, xhii, yloi, yhii, l, c in zip(xlo, xhi, ylo, yhi, labels, colors):
 ax.loglog()
 ax.set_xlim(xmin, xmax)
 ax.set_ylim(ymin, ymax)
-ax.set_xlabel("Latency requirement [s]")
+ax.set_xlabel("Model Latency [s]")
 ax.set_ylabel("Memory bandwidth [B/s]")
 
-ax.axhline(y=10e9, color="green", linestyle="--")
-ax.text(1, 5e9, "DRAM", color="green", style="italic", fontsize=18)
+dram_bw = 20e9
+ax.axhline(y=dram_bw, color="green", linestyle="--")
+ax.text(2e-9, 5e9, "DRAM", color="green", style="italic", fontsize=18)
 
 ax.axhline(y=10e12, color="red", linestyle="--")
-ax.text(1, 5e12, "BRAM", color="red", style="italic", fontsize=18)
+ax.text(2e-9, 5e12, "BRAM", color="red", style="italic", fontsize=18)
 
 ax.axhline(y=300e12, color="blue", linestyle="--")
-ax.text(1, 150e12, "FF", color="blue", style="italic", fontsize=18)
+ax.text(2e-9, 150e12, "FF", color="blue", style="italic", fontsize=18)
 
 # 100 KB model size line (assume fully-connected layer)
 # so there are 100k X 100k ops = 10^10 Ops relative to memory bandwidth
@@ -247,9 +240,13 @@ y_100kb = [1e14, 1e11, 1e10, 10e6, 1e4, 1e2]
 x_10mb = [1e-9, 100e-9, 1e-6, 10e-6, 1e-3, 1e3, 1e5]
 y_10mb = [1e16, 100e12, 10e12, 1e12, 10e9, 1e4, 1e2]
 
+# 50 MB model
+x_50mb = [1e-9, 1e-3, 25e-4, 1e-1]
+y_50mb = [50e15, 50e9, 2e10, 50e7]
+
 ax.plot(x_100kb, y_100kb, linestyle="-", color="purple")
-loc_100kb = np.array((1e-2, 10e4))
-angle_100kb = 310
+loc_100kb = np.array((0.5e-4, 0.75e8))
+angle_100kb = 307
 ax.text(
     *loc_100kb, 
     "100 KB model size", 
@@ -261,8 +258,8 @@ ax.text(
 )
 
 ax.plot(x_10mb, y_10mb, linestyle="-", color="magenta")
-loc_10mb = np.array((0.3, 40e4))
-angle_10mb = 310
+loc_10mb = np.array((0.9e-3, 5e8))
+angle_10mb = 307
 ax.text(
     *loc_10mb, 
     "10 MB model size", 
@@ -273,24 +270,47 @@ ax.text(
     # transform_rotates_text=True
 )
 
+ax.plot(x_50mb, y_50mb, linestyle="-", color="red")
+loc_50mb = np.array((3e-3, 7e8))
+angle_50mb = 307
+ax.text(
+    *loc_50mb, 
+    "50 MB model size", 
+    fontsize=18, 
+    rotation=angle_50mb, 
+    color="red",
+    # rotation_mode="anchor", 
+    # transform_rotates_text=True
+)
+
 ax.fill_between(
-    x_10mb[:5], 
-    y_10mb[:5], 
-    [10e9] * 5, 
+    x_50mb[:3], 
+    y_50mb[:3], 
+    [dram_bw] * 3, 
     interpolate=False, 
     color="red", 
     alpha=0.15,
-    label="On-chip inference required"
+    label="On-chip inference\nrequired"
 )
+
+# xtick_labels = [1e-9, 1e-6, 1e-3, 0] 
+# xticks = np.arange(min(xtick_labels), max(xtick_labels) + 1, 1e-3)
+# print(xticks)
+# for x in xticks:
+#     print(x)
+# ax.set_xticks(xticks)
+# ax.set_xticklabels(xtick_labels)
 
 # Second y-axis
 ax2.loglog()
 ax2.set_ylim(ymin, ymax)
 ax2.set_ylabel("Compute Performance [Op/s]")
 
-ax.legend(loc="lower left", fontsize=16)
+# ax.legend(loc="lower left", fontsize=20)
 
 ax.grid()
+ax.legend(loc="upper right", fontsize=18, facecolor="white")
+
 plt.tight_layout()
 plt.savefig("sciml_onchip_graph.pdf")
 plt.savefig("sciml_onchip_graph.png")
