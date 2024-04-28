@@ -102,16 +102,16 @@ input_dict = {
     # Plasma control + model
     # "Plasma control": [3e9 + 2e9, 3e9 + 2e9, 5e-6, 20e-6],
     # Plasma control model
-    "Plasma control": [2e9, 2e9, 5e-6, 10e-6],
+    "Plasma control": [2e9, 4e9, 5e-6, 10e-6],
     # "Neuro": [5e6, 5e6, 1e-3, 1e-3],
     # "Internet-of-things": [3e3 / 100e-3, 3e3 / 1e-3, 1e-3, 100e-3],
     # TODO: Combine KWS and AD into one IoT error bar
     # KWS hls4ml model
-    "Keyword Spotting": [9e9, 17e9, 17e-6, 33e-6],
+    "IoT Keyword Spotting": [9e9, 17e9, 17e-6, 33e-6],
     # IoT + AD
     # "Anomoly Detection": [3e3 / 100e-3 + 20e6, 3e3 / 1e-3 + 20e6, 1e-3, 100e-3],
     # AD hls4ml model
-    "Anomaly Detection": [4e8, 1e9, 19e-6, 45e-6],
+    "IoT anomaly detection": [4e8, 1e9, 19e-6, 45e-6],
     # "Mobile devices": [1e3 / 100e-3, 1e3 / 40e-3, 40e-3, 100e-3],
     # "FF": [10e12, 10e13, 10e-9, 50e-9],
 }
@@ -120,6 +120,8 @@ ylo = np.array([input_dict[key][0] for key in labels])
 yhi = np.array([input_dict[key][1] for key in labels])
 xlo = np.array([input_dict[key][2] for key in labels])
 xhi = np.array([input_dict[key][3] for key in labels])
+
+# print(xhi,xlo,yhi,ylo)
 
 colors = [
     "#1f77b4",
@@ -220,10 +222,15 @@ ax.set_ylabel("Memory bandwidth [B/s]")
 
 dram_bw = 20e9
 ax.axhline(y=dram_bw, color="green", linestyle="--")
-ax.text(2e-9, 5e9, "DRAM", color="green", style="italic", fontsize=18)
+ax.text(2e-9, 5e9, "DRAM capacity", color="green", style="italic", fontsize=16)
+
+dram_bw_lo = 2e9
+ax.axhline(y=dram_bw_lo, color="green", linestyle="--")
+# ax.text(2e-9, 5e9, "DRAM", color="green", style="italic", fontsize=18)
 
 ax.axhline(y=10e12, color="red", linestyle="--")
-ax.text(2e-9, 5e12, "BRAM", color="red", style="italic", fontsize=18)
+ax.axhline(y=10e11, color="red", linestyle="--")
+ax.text(2e-9, 2e12, "BRAM\ncapacity", color="red", style="italic", fontsize=18)
 
 ax.axhline(y=300e12, color="blue", linestyle="--")
 ax.text(2e-9, 150e12, "FF", color="blue", style="italic", fontsize=18)
@@ -241,8 +248,8 @@ x_10mb = [1e-9, 100e-9, 1e-6, 10e-6, 1e-3, 1e3, 1e5]
 y_10mb = [1e16, 100e12, 10e12, 1e12, 10e9, 1e4, 1e2]
 
 # 50 MB model
-x_50mb = [1e-9, 1e-3, 25e-4, 1e-1]
-y_50mb = [50e15, 50e9, 2e10, 50e7]
+x_50mb = [1e-9, 1e-3, 250e-4, 1e-1]
+y_50mb = [50e15, 50e9, 2e9, 50e7]
 
 ax.plot(x_100kb, y_100kb, linestyle="-", color="purple")
 loc_100kb = np.array((0.5e-4, 0.75e8))
@@ -286,12 +293,42 @@ ax.text(
 ax.fill_between(
     x_50mb[:3], 
     y_50mb[:3], 
-    [dram_bw] * 3, 
+    [dram_bw_lo] * 3, 
     interpolate=False, 
     color="red", 
     alpha=0.15,
     label="On-chip inference\nrequired"
 )
+
+ax.fill_between(
+    [1e-7,1e-1], 
+    [2e10,2e10],
+    [2e9,2e9],
+    interpolate=False, 
+    # facecolor="none",
+    hatch='xx',
+    color="none", 
+    edgecolor="lightgrey",
+    # alpha=0.15    
+    # label="On-chip inference\nrequired"
+)
+
+ax.fill_between(
+    [1e-9,5e-6, 5e-5], 
+    [1e13,1e13, 1e12],
+    [1e12,1e12, 1e12],
+    interpolate=False, 
+    # facecolor="none",
+    hatch='xx',
+    color="none", 
+    edgecolor="lightgrey",
+    # alpha=0.15    
+    # label="On-chip inference\nrequired"
+)
+
+print(x_50mb[:3])
+print(y_50mb[:3])
+# print([dram_bw_lo] * 3)
 
 # xtick_labels = [1e-9, 1e-6, 1e-3, 0] 
 # xticks = np.arange(min(xtick_labels), max(xtick_labels) + 1, 1e-3)
@@ -309,7 +346,7 @@ ax2.set_ylabel("Compute Performance [Op/s]")
 # ax.legend(loc="lower left", fontsize=20)
 
 ax.grid()
-ax.legend(loc="upper right", fontsize=18, facecolor="white")
+ax.legend(loc="upper right", fontsize=16, frameon=True, facecolor="white",framealpha=1.0, edgecolor='black')
 
 plt.tight_layout()
 plt.savefig("sciml_onchip_graph.pdf")
