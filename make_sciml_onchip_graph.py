@@ -231,7 +231,7 @@ ax.set_ylabel("Memory bandwidth [B/s]")
 
 dram_bw = 20e9
 ax.axhline(y=dram_bw, color="green", linestyle="--")
-ax.text(2e-9, 5e9, "DRAM", color="green", style="italic", fontsize=18)
+ax.text(2e-9, 1e10 * 1.1, "DRAM", color="green", style="italic", fontsize=18)
 
 ax.axhline(y=10e12, color="red", linestyle="--")
 ax.text(2e-9, 5e12, "BRAM", color="red", style="italic", fontsize=18)
@@ -239,18 +239,37 @@ ax.text(2e-9, 5e12, "BRAM", color="red", style="italic", fontsize=18)
 ax.axhline(y=300e12, color="blue", linestyle="--")
 ax.text(2e-9, 150e12, "FF", color="blue", style="italic", fontsize=18)
 
+# AIE compute capacity
+# 400 tiles * 128 MACs * 1 GHz
+aie_compute = 400 * 128 * 1e9
+ax.axhline(y=aie_compute, color="tab:blue", linestyle=":")
+ax.text(1e-3, aie_compute * 1.15, "AIE compute", color="tab:blue", style="oblique", fontsize=18)
+
+zcu104_compute = 1.2 * 1e12
+ax.axhline(y=zcu104_compute, color="tab:orange", linestyle=":")
+ax.text(5e-4, zcu104_compute * 1.15, "ZCU104 compute", color="tab:orange", style="oblique", fontsize=18)
+
 # 100 KB model size line (assume fully-connected layer)
 # so there are 100k X 100k ops = 10^10 Ops relative to memory bandwidth
+
+x = np.array([1e-5, 1e-1, 1e-9])
 x_100kb = [1e-9, 1e-6, 1e-5, 10e-3, 10, 1e3]
 y_100kb = [1e14, 1e11, 1e10, 10e6, 1e4, 1e2]
 
+# 5 MB model
+y_5mb = 5e6 / x
+
+
 # 10 MB model
-x_10mb = [1e-9, 100e-9, 1e-6, 10e-6, 1e-3, 1e3, 1e5]
-y_10mb = [1e16, 100e12, 10e12, 1e12, 10e9, 1e4, 1e2]
+y_10mb = 10e6 / x
+
+# 32 MB model
+x_32mb = np.array([1e-9, 1e-3, 1.5e-3, 1e-1])
+y_32mb = 32e6 / x_32mb  
 
 # 50 MB model
-x_50mb = [1e-9, 1e-3, 25e-4, 1e-1]
-y_50mb = [50e15, 50e9, 2e10, 50e7]
+x_50mb = np.array([1e-9, 1e-3, 25e-4, 1e-1])
+y_50mb = 50e6 / x_50mb
 
 ax.plot(x_100kb, y_100kb, linestyle="-", color="purple")
 loc_100kb = np.array((0.5e-4, 0.75e8))
@@ -265,35 +284,37 @@ ax.text(
     # transform_rotates_text=True
 )
 
-ax.plot(x_10mb, y_10mb, linestyle="-", color="magenta")
-loc_10mb = np.array((0.9e-3, 5e8))
-angle_10mb = 307
+ax.plot(x, y_5mb, linestyle="-", color="magenta")
+loc_5mb = np.array((0.65e-3, 5e8))
+angle_5mb = 307
 ax.text(
-    *loc_10mb, 
-    "10 MB model size", 
+    *loc_5mb, 
+    "ZCU104 (5 MB)", 
     fontsize=18, 
-    rotation=angle_10mb, 
+    rotation=angle_5mb, 
     color="magenta",
     # rotation_mode="anchor", 
     # transform_rotates_text=True
 )
 
-ax.plot(x_50mb, y_50mb, linestyle="-", color="red")
-loc_50mb = np.array((3e-3, 7e8))
-angle_50mb = 307
+
+ax.plot(x_32mb, y_32mb, linestyle="-", color="red")
+loc_32mb = np.array((6e-3, 7e8))
+angle_32mb = 307
 ax.text(
-    *loc_50mb, 
-    "50 MB model size", 
+    *loc_32mb, 
+    "AIE (32 KB)", 
     fontsize=18, 
-    rotation=angle_50mb, 
+    rotation=angle_32mb, 
     color="red",
     # rotation_mode="anchor", 
     # transform_rotates_text=True
 )
 
+
 ax.fill_between(
-    x_50mb[:3], 
-    y_50mb[:3], 
+    x_32mb[:3], 
+    y_32mb[:3], 
     [dram_bw] * 3, 
     interpolate=False, 
     color="red", 
@@ -314,11 +335,17 @@ ax2.loglog()
 ax2.set_ylim(ymin, ymax)
 ax2.set_ylabel("Compute Performance [Op/s]")
 
-# ax.legend(loc="lower left", fontsize=20)
 
 ax.grid()
-ax.legend(loc="upper right", fontsize=18)
+ax.legend(
+    loc="lower left", 
+    fontsize=16, 
+    frameon=True, 
+    facecolor="white",
+    framealpha=0.9, 
+    edgecolor='black'
+)
 
 plt.tight_layout()
-plt.savefig("sciml_onchip_graph.pdf")
-plt.savefig("sciml_onchip_graph.png")
+plt.savefig("sciml_onchip_aie_graph.pdf")
+plt.savefig("sciml_onchip_aie_graph.png")
