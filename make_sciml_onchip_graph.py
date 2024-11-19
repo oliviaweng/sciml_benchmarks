@@ -77,17 +77,22 @@ input_dict = {
     # "LHC sensor": [26e12, 101e12, 10e-9, 25e-9],
     # LHC sensor model
     "LHC sensor": [80e9, 100e9, 10e-9, 25e-9],
+
     # "LHC near-sensor": [48 * 40e6, 48 * 40e6, 25e-9, 100e-9],
     # "LHC trigger": [32 * 40e6, 32 * 40e6, 100e-9, 5e-6],
     # LHC trigger + model
     # "LHC trigger": [32 * 40e6 + 26e9, 32 * 40e6 + 26e9, 100e-9, 5e-6],
+
     # LHC trigger model
     "LHC trigger": [26e9, 30e9, 150e-9, 200e-9],
+
     # "Beam Control": [3e3 * 15, 3e3 * 15, 100e-6, 5e-3], # Booster
     # Booster control + model
     # "Beam control": [3e3 * 15 + 9e9, 3e3 * 15 + 9e9, 100e-6, 5e-3], # Booster
+
     # Beam control model
-    "Beam control": [9e9, 25e9, 1e-6, 7e-6], # Booster
+    "Beam control": [9e9, 25e9, 1e-6, 7e-6],
+
     # "Magnet quench": [3e6, 3e6, 100e-6, 100e-6],  # Quench
     # "Pixel": [1.28e9/8 * 40/.75, 4*1.28e9/8 * 40/.75, 10e-9, 25e-9],
     # "DUNE": [1e9, 10e9, 1, 5*60],
@@ -101,17 +106,23 @@ input_dict = {
     # "Plasma control": [3e9, 3e9, 5e-6, 20e-6],
     # Plasma control + model
     # "Plasma control": [3e9 + 2e9, 3e9 + 2e9, 5e-6, 20e-6],
+
     # Plasma control model
     "Plasma control": [2e9, 2e9, 5e-6, 10e-6],
+
     # "Neuro": [5e6, 5e6, 1e-3, 1e-3],
     # "Internet-of-things": [3e3 / 100e-3, 3e3 / 1e-3, 1e-3, 100e-3],
     # TODO: Combine KWS and AD into one IoT error bar
+
     # KWS hls4ml model
     "Keyword Spotting": [9e9, 17e9, 17e-6, 33e-6],
+
     # IoT + AD
     # "Anomoly Detection": [3e3 / 100e-3 + 20e6, 3e3 / 1e-3 + 20e6, 1e-3, 100e-3],
+
     # AD hls4ml model
     "Anomaly Detection": [4e8, 1e9, 19e-6, 45e-6],
+
     # "Mobile devices": [1e3 / 100e-3, 1e3 / 40e-3, 40e-3, 100e-3],
     # "FF": [10e12, 10e13, 10e-9, 50e-9],
 }
@@ -164,7 +175,7 @@ for xloi, xhii, yloi, yhii, l, c in zip(xlo, xhi, ylo, yhi, labels, colors):
     )
     sz=20.
 
-    continue # To turn of plot labels and just rely on legend
+    continue # To turn off plot labels and just rely on legend
 
     if "Internet-of-things" in l:
         # ax.text(xi * 5, yi * 2, l, color=c, size=sz)
@@ -230,9 +241,6 @@ ax.text(2e-9, 150e12, "FF", color="blue", style="italic", fontsize=18)
 
 # 100 KB model size line (assume fully-connected layer)
 # so there are 100k X 100k ops = 10^10 Ops relative to memory bandwidth
-# OLD BUGGY
-# x_100kb = [1e-9, 1e-6, 10e-6, 10e-3, 10, 1e3]
-# y_100kb = [1e15, 1e12, 100e9, 10e7, 1e5, 1e3]
 x_100kb = [1e-9, 1e-6, 1e-5, 10e-3, 10, 1e3]
 y_100kb = [1e14, 1e11, 1e10, 10e6, 1e4, 1e2]
 
@@ -309,7 +317,7 @@ ax2.set_ylabel("Compute Performance [Op/s]")
 # ax.legend(loc="lower left", fontsize=20)
 
 ax.grid()
-ax.legend(loc="upper right", fontsize=18, facecolor="white")
+ax.legend(loc="upper right", fontsize=18)
 
 plt.tight_layout()
 plt.savefig("sciml_onchip_graph.pdf")
