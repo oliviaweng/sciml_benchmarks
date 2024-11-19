@@ -2,6 +2,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches 
 import mplhep as hep
 import numpy as np
 import math
@@ -246,8 +247,8 @@ ax.axhline(y=aie_compute, color="tab:blue", linestyle=":")
 ax.text(1e-3, aie_compute * 1.15, "AIE compute", color="tab:blue", style="oblique", fontsize=18)
 
 zcu104_compute = 1.2 * 1e12
-ax.axhline(y=zcu104_compute, color="tab:orange", linestyle=":")
-ax.text(5e-4, zcu104_compute * 1.15, "ZCU104 compute", color="tab:orange", style="oblique", fontsize=18)
+ax.axhline(y=zcu104_compute, color="purple", linestyle=":")
+ax.text(5e-4, zcu104_compute * 1.15, "ZCU104 compute", color="purple", style="oblique", fontsize=18)
 
 # 100 KB model size line (assume fully-connected layer)
 # so there are 100k X 100k ops = 10^10 Ops relative to memory bandwidth
@@ -257,7 +258,8 @@ x_100kb = [1e-9, 1e-6, 1e-5, 10e-3, 10, 1e3]
 y_100kb = [1e14, 1e11, 1e10, 10e6, 1e4, 1e2]
 
 # 5 MB model
-y_5mb = 5e6 / x
+x_5mb = np.array([1e-9, 1e-3, 1.5e-3, 1e-1])
+y_5mb = 5e6 / x_5mb
 
 
 # 10 MB model
@@ -271,7 +273,7 @@ y_32mb = 32e6 / x_32mb
 x_50mb = np.array([1e-9, 1e-3, 25e-4, 1e-1])
 y_50mb = 50e6 / x_50mb
 
-ax.plot(x_100kb, y_100kb, linestyle="-", color="purple")
+ax.plot(x_100kb, y_100kb, linestyle="-", color="brown")
 loc_100kb = np.array((0.5e-4, 0.75e8))
 angle_100kb = 307
 ax.text(
@@ -279,12 +281,12 @@ ax.text(
     "100 KB model size", 
     fontsize=18, 
     rotation=angle_100kb, 
-    color="purple",
+    color="brown",
     # rotation_mode="anchor", 
     # transform_rotates_text=True
 )
 
-ax.plot(x, y_5mb, linestyle="-", color="magenta")
+ax.plot(x_5mb, y_5mb, linestyle="-", color="magenta")
 loc_5mb = np.array((0.65e-3, 5e8))
 angle_5mb = 307
 ax.text(
@@ -298,29 +300,37 @@ ax.text(
 )
 
 
-ax.plot(x_32mb, y_32mb, linestyle="-", color="red")
+ax.plot(x_32mb, y_32mb, linestyle="-", color="tab:blue")
 loc_32mb = np.array((6e-3, 7e8))
 angle_32mb = 307
 ax.text(
     *loc_32mb, 
-    "AIE (32 KB)", 
+    "AIE (32 MB)", 
     fontsize=18, 
     rotation=angle_32mb, 
-    color="red",
+    color="tab:blue",
     # rotation_mode="anchor", 
     # transform_rotates_text=True
 )
 
 
-ax.fill_between(
-    x_32mb[:3], 
-    y_32mb[:3], 
-    [dram_bw] * 3, 
-    interpolate=False, 
-    color="red", 
-    alpha=0.15,
-    label="On-chip inference\nrequired"
-)
+x_zcu = np.array([1e-9, 4e-6, 2.5e-4])
+y_zcu = 5e6 / x_zcu
+
+# ZCU104 Trapezoid
+x1_zcu = [1e-9, 1e-9, 4e-6, 2.5e-4]
+y1_zcu = [dram_bw, zcu104_compute, zcu104_compute, dram_bw]
+ax.add_patch(patches.Polygon(
+    xy=list(zip(x1_zcu, y1_zcu)), color="plum", hatch="x", alpha=0.5, label="ZCU104 on-chip"
+))
+
+
+# AIE Trapezoid
+x1_aie = [1e-9, 1e-9, 6e-7, 1.5e-3] 
+y1_aie = [dram_bw, aie_compute, aie_compute, dram_bw]
+ax.add_patch(patches.Polygon(
+    xy=list(zip(x1_aie, y1_aie)), color="royalblue", alpha=0.2, label="AIE on-chip"
+))
 
 # xtick_labels = [1e-9, 1e-6, 1e-3, 0] 
 # xticks = np.arange(min(xtick_labels), max(xtick_labels) + 1, 1e-3)
@@ -339,7 +349,7 @@ ax2.set_ylabel("Compute Performance [Op/s]")
 ax.grid()
 ax.legend(
     loc="lower left", 
-    fontsize=16, 
+    fontsize=14, 
     frameon=True, 
     facecolor="white",
     framealpha=0.9, 
