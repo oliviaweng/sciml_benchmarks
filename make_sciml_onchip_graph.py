@@ -267,7 +267,7 @@ y_10mb = 10e6 / x
 
 # 32 MB model
 x_32mb = np.array([1e-9, 1e-3, 1.5e-3, 1e-1])
-y_32mb = 32e6 / x_32mb  
+y_32mb = 34e6 / x_32mb  
 
 # 50 MB model
 x_50mb = np.array([1e-9, 1e-3, 25e-4, 1e-1])
@@ -305,7 +305,7 @@ loc_32mb = np.array((6e-3, 7e8))
 angle_32mb = 307
 ax.text(
     *loc_32mb, 
-    "AIE (32 MB)", 
+    "AIE (34 MB)", 
     fontsize=18, 
     rotation=angle_32mb, 
     color="tab:blue",
@@ -326,7 +326,7 @@ ax.add_patch(patches.Polygon(
 
 
 # AIE Trapezoid
-x1_aie = [1e-9, 1e-9, 6e-7, 1.5e-3] 
+x1_aie = [1e-9, 1e-9, 6.3e-7, 1.6e-3] 
 y1_aie = [dram_bw, aie_compute, aie_compute, dram_bw]
 ax.add_patch(patches.Polygon(
     xy=list(zip(x1_aie, y1_aie)), color="royalblue", alpha=0.2, label="AIE on-chip"
