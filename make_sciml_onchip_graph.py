@@ -50,6 +50,9 @@ import math
 # LHC Sensor (ECON)
 # 2k weights / 25 ns = 80e9 
 
+# LHC SmartPixel Sensor
+# 1163 weights / 25 ns  = 47e9
+
 # LHC Trigger (Jet tagger)
 # 4k weights / 150 ns = 26e9 
 
@@ -77,6 +80,7 @@ input_dict = {
     # "LHC sensor": [26e12, 101e12, 10e-9, 25e-9],
     # LHC sensor model
     "LHC sensor": [80e9, 100e9, 10e-9, 25e-9],
+    "LHC pixel sensor": [47e9, 55e9, 10e-9, 25e-9],
 
     # "LHC near-sensor": [48 * 40e6, 48 * 40e6, 25e-9, 100e-9],
     # "LHC trigger": [32 * 40e6, 32 * 40e6, 100e-9, 5e-6],
@@ -229,9 +233,9 @@ ax.set_ylim(ymin, ymax)
 ax.set_xlabel("Model Latency [s]")
 ax.set_ylabel("Memory bandwidth [B/s]")
 
-dram_bw = 20e9
+dram_bw = 50e9
 ax.axhline(y=dram_bw, color="green", linestyle="--")
-ax.text(2e-9, 5e9, "DRAM", color="green", style="italic", fontsize=18)
+ax.text(2e-9, 30e9, "DRAM", color="green", style="italic", fontsize=18)
 
 ax.axhline(y=10e12, color="red", linestyle="--")
 ax.text(2e-9, 5e12, "BRAM", color="red", style="italic", fontsize=18)
@@ -292,13 +296,13 @@ ax.text(
 )
 
 ax.fill_between(
-    x_50mb[:3], 
+    x_50mb[:2] + [10e-4], 
     y_50mb[:3], 
     [dram_bw] * 3, 
     interpolate=False, 
     color="red", 
     alpha=0.15,
-    label="On-chip inference\nrequired"
+    label="On-chip inference required"
 )
 
 # xtick_labels = [1e-9, 1e-6, 1e-3, 0] 
@@ -317,7 +321,15 @@ ax2.set_ylabel("Compute Performance [Op/s]")
 # ax.legend(loc="lower left", fontsize=20)
 
 ax.grid()
-ax.legend(loc="upper right", fontsize=18)
+# ax.legend(loc="upper right", fontsize=18)
+ax.legend(
+    loc="lower left", 
+    fontsize=14, 
+    frameon=True, 
+    facecolor="white",
+    framealpha=0.9, 
+    edgecolor='black'
+)
 
 plt.tight_layout()
 plt.savefig("sciml_onchip_graph.pdf")
