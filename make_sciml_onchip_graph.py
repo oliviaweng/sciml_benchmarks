@@ -51,6 +51,9 @@ import math
 # LHC Sensor (ECON)
 # 2k weights / 25 ns = 80e9 
 
+# LHC SmartPixel Sensor
+# 1163 weights / 25 ns  = 47e9
+
 # LHC Trigger (Jet tagger)
 # 4k weights / 150 ns = 26e9 
 
@@ -78,6 +81,7 @@ input_dict = {
     # "LHC sensor": [26e12, 101e12, 10e-9, 25e-9],
     # LHC sensor model
     "LHC sensor": [80e9, 100e9, 10e-9, 25e-9],
+    "LHC pixel sensor": [47e9, 55e9, 10e-9, 25e-9],
 
     # "LHC near-sensor": [48 * 40e6, 48 * 40e6, 25e-9, 100e-9],
     # "LHC trigger": [32 * 40e6, 32 * 40e6, 100e-9, 5e-6],
@@ -230,9 +234,9 @@ ax.set_ylim(ymin, ymax)
 ax.set_xlabel("Model Latency [s]")
 ax.set_ylabel("Memory bandwidth [B/s]")
 
-dram_bw = 20e9
+dram_bw = 50e9
 ax.axhline(y=dram_bw, color="green", linestyle="--")
-ax.text(2e-9, 1e10 * 1.1, "DRAM", color="green", style="italic", fontsize=18)
+ax.text(2e-9, 3e10, "DRAM", color="green", style="italic", fontsize=18)
 
 ax.axhline(y=10e12, color="red", linestyle="--")
 ax.text(2e-9, 5e12, "BRAM", color="red", style="italic", fontsize=18)
@@ -318,7 +322,8 @@ x_zcu = np.array([1e-9, 4e-6, 2.5e-4])
 y_zcu = 5e6 / x_zcu
 
 # ZCU104 Trapezoid
-x1_zcu = [1e-9, 1e-9, 4e-6, 2.5e-4]
+# x1_zcu = [1e-9, 1e-9, 4e-6, 2.5e-4] # for 20e9 dram_bw
+x1_zcu = [1e-9, 1e-9, 4e-6, 10e-5] # for 50e9 dram_bw
 y1_zcu = [dram_bw, zcu104_compute, zcu104_compute, dram_bw]
 ax.add_patch(patches.Polygon(
     xy=list(zip(x1_zcu, y1_zcu)), color="plum", hatch="x", alpha=0.5, label="ZCU104 on-chip"
@@ -326,7 +331,8 @@ ax.add_patch(patches.Polygon(
 
 
 # AIE Trapezoid
-x1_aie = [1e-9, 1e-9, 6.3e-7, 1.6e-3] 
+# x1_aie = [1e-9, 1e-9, 6.3e-7, 1.6e-3] # for 20e9 dram_bw
+x1_aie = [1e-9, 1e-9, 6.3e-7, 7e-4] # for 50e9 dram_bw
 y1_aie = [dram_bw, aie_compute, aie_compute, dram_bw]
 ax.add_patch(patches.Polygon(
     xy=list(zip(x1_aie, y1_aie)), color="royalblue", alpha=0.2, label="AIE on-chip"
